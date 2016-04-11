@@ -1,0 +1,176 @@
+;------------------
+; general functions
+;------------------
+
+; atoms
+(def {nil} {})
+(def {true} 1)
+(def {false} 0)
+
+; function definitions
+(def {fun}
+  (\ {f body}
+    {def (head f) (\ (tail f) body)}))
+
+; unpack list for function
+(fun {unpack f xs}
+  {eval
+    (join (list f) xs)})
+
+; pack list for function
+(fun {pack f & xs} {f xs})
+
+; alias to curry and uncurry
+(def {curry} unpack)
+(def {uncurry} pack)
+
+; open new scope
+(fun {let b}
+  {((\ {_} b) ())})
+
+; logical functions
+(fun {not x}   {- 1 x})
+(fun {or x y}  {+ x y})
+(fun {and x y} {* x y})
+
+; misc
+(fun {flip f a b} {f b a})
+(fun {ghost & xs} {eval xs})
+(fun {comp f g x} {f (g x)})
+
+; --------------
+; list functions
+; --------------
+
+; first, second, and third helpers
+(fun {fst xs}
+  {(eval (head xs))})
+(fun {snd xs}
+  {(eval (head (tail xs)))})
+(fun {trd xs}
+  {(eval (head (tail (tail xs))))})
+
+; length of a list
+(fun {len xs}
+  {if (== xs nil)
+    {0}
+    {+ 1 (len (tail xs))}})
+
+; Nth element of a list
+(fun {nth n xs}
+  {if (== n 0)
+    {fst xs}
+    {nth (- n 1) (tail xs)}})
+
+; last item in a list
+(fun {last xs}
+  {nth (- (len xs) 1) xs})
+
+; take the first N elements
+(fun {take n xs}
+  {if (== n 0)
+    {nil}
+    {join (head xs)
+          (take (- n 1) (tail xs))}})
+
+; drop the first N elements
+(fun {drop n xs}
+  {if (== n 0)
+    {xs}
+    {drop (- n 1) (tail xs)}})
+
+; split at N
+(fun {split n xs}
+  {list (take n xs) (drop n xs)})
+
+; element in list
+(fun {elem x xs}
+  {if (== xs nil)
+    {false}
+    {if (== x (fst xs))
+      {true}
+      {elem x (tail xs)}}})
+
+; map elements
+(fun {map f xs}
+  {if (== xs nil)
+    {nil}
+    {join (list (f (fst xs)))
+          (map f (tail xs))}})
+
+; filter elements
+(fun {filter f xs}
+  {if (== xs nil)
+    {nil}
+    {join
+      (if (f (fst xs))
+        {head xs}
+        {nil})
+      (filter f (tail xs))}})
+
+; fold left
+(fun {foldl f z xs}
+  {if (== xs nil)
+    {z}
+    {foldl f (f z (fst l)) (tail xs)}})
+
+(fun {sum xs}
+  {foldl + 0 xs})
+
+(fun {prod xs}
+  {foldl * 1 xs})
+
+; --------------
+; do function
+; --------------
+
+; perform several things in sequence
+(fun {do & xs}
+  {if (== xs nil)
+    {nil}
+    {last xs}})
+
+; --------------
+; conditional functions
+; --------------
+
+; select function
+; e.g.
+; (fun {foo x}
+;   {select
+;     {(== x 0) "bar"}
+;     {(== x 1) "faz"}
+;     {(== x 2) "baz"}})
+(fun {select & cs}
+  {if (== cs nil)
+    {error "No selection found"}
+    {if (fst (fst cs))
+      {snd (fst cs)}
+      {unpack select (tail cs)}}})
+
+; default case
+(def {otherwise} true)
+
+; case statement turns select into a switch statement
+; e.g.
+; (fun {foo x} {
+;   case x
+;     {0 "bar"}
+;     {1 "faz"}
+;     {2 "baz"}})
+(fun {case x & cs}
+  {if (== cs nil)
+    {error "No case found"}
+    {if (== x (fst (fst cs)))
+      {snd (fst cs)}
+      {unpack case (join (list x) (tail cs))}}})
+
+; --------------
+; Fibonacci
+; --------------
+
+(fun {fib n}
+  {select
+    {(== n 0) 0}
+    {(== n 1) 1}
+    {otherwise (+ (fib (- n 1)) (fib (- n 2)))}})
