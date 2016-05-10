@@ -112,7 +112,7 @@
 (fun {foldl f z xs}
   {if (== xs nil)
     {z}
-    {foldl f (f z (fst l)) (tail xs)}})
+    {foldl f (f z (fst xs)) (tail xs)}})
 
 (fun {sum xs}
   {foldl + 0 xs})
